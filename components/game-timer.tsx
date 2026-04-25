@@ -12,17 +12,10 @@ type Props = {
   musicMuted?: boolean;
   /** Lyria 3 Clip の取得状況（fetching / ready / playing / error）。 */
   bgmStatus?: BgmStatus;
-  /** 追加お手本生成中かどうか。 */
-  expanding?: boolean;
-  /** すでに何回拡張されたか。 */
-  expansionRound?: number;
-  /** 拡張の上限。 */
-  maxExpansions?: number;
 };
 
 /**
- * カウントダウンの帯。残量バー + 残り秒数 + 緊張度ラベル
- * + BGM 取得状態と動的拡張の通知も表示する。
+ * カウントダウンの帯。残量バー + 残り秒数 + 緊張度ラベル + BGM 取得状態を表示する。
  * 進捗バーは赤に近づくにつれ色と発光が強くなり、視覚にも緊迫感を載せる。
  */
 export function GameTimer({
@@ -30,9 +23,6 @@ export function GameTimer({
   totalMs,
   musicMuted,
   bgmStatus,
-  expanding,
-  expansionRound = 0,
-  maxExpansions = 0,
 }: Props) {
   const safeTotal = Math.max(1, totalMs);
   const elapsed = Math.max(0, Math.min(safeTotal, safeTotal - remainingMs));
@@ -88,45 +78,20 @@ export function GameTimer({
         </span>
       </div>
 
-      {(bgmStatus || expanding || expansionRound > 0) && (
+      {bgmStatus && (
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] tracking-wide text-muted-foreground">
-          {bgmStatus && (
-            <span
-              className="rounded-full border border-border/60 bg-background/60 px-2 py-[2px]"
-              style={
-                bgmStatus === "playing" && !musicMuted
-                  ? { color: "oklch(0.45 0.18 145)", borderColor: "oklch(0.7 0.15 145 / 0.5)" }
-                  : bgmStatus === "error"
-                    ? { color: "oklch(0.45 0.22 25)", borderColor: "oklch(0.7 0.2 25 / 0.5)" }
-                    : undefined
-              }
-            >
-              {bgmStatusLabel(bgmStatus, musicMuted)}
-            </span>
-          )}
-          {expanding && (
-            <span
-              className="rounded-full border px-2 py-[2px]"
-              style={{
-                color: "oklch(0.45 0.18 250)",
-                borderColor: "oklch(0.7 0.15 250 / 0.5)",
-                background: "oklch(0.95 0.04 250 / 0.6)",
-              }}
-            >
-              お手本にディテール追加中…
-            </span>
-          )}
-          {expansionRound > 0 && !expanding && (
-            <span
-              className="rounded-full border px-2 py-[2px]"
-              style={{
-                color: "oklch(0.45 0.18 250)",
-                borderColor: "oklch(0.7 0.15 250 / 0.5)",
-              }}
-            >
-              拡張 {expansionRound} / {maxExpansions}
-            </span>
-          )}
+          <span
+            className="rounded-full border border-border/60 bg-background/60 px-2 py-[2px]"
+            style={
+              bgmStatus === "playing" && !musicMuted
+                ? { color: "oklch(0.45 0.18 145)", borderColor: "oklch(0.7 0.15 145 / 0.5)" }
+                : bgmStatus === "error"
+                  ? { color: "oklch(0.45 0.22 25)", borderColor: "oklch(0.7 0.2 25 / 0.5)" }
+                  : undefined
+            }
+          >
+            {bgmStatusLabel(bgmStatus, musicMuted)}
+          </span>
         </div>
       )}
     </div>

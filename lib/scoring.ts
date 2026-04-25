@@ -52,7 +52,9 @@ export function scorePattern(
       (sum, g) => sum + TEXTURE_PROFILES[g.texture].stitchSize,
       0,
     ) / guide.length;
-  const matchRadius = options.matchRadius ?? avgStitchSize * 0.9;
+  // ★甘め判定: ヒット半径を編み目サイズの 1.4 倍まで広げる
+  //   （プレイヤーが少しズレてもガイドにヒットしたとみなす）
+  const matchRadius = options.matchRadius ?? avgStitchSize * 1.4;
   const radiusSq = matchRadius * matchRadius;
 
   // 各 player が「どの guide に消費されたか」を記録（重複マッチを避けるためではなく、
@@ -98,37 +100,60 @@ export function scorePattern(
     }
   }
 
-  const coverage = (hitCount / guide.length) * 100;
-  const colorAccuracy = hitCount > 0 ? (colorHitCount / hitCount) * 100 : 0;
-  const positionAccuracy = hitCount > 0 ? (positionScoreSum / hitCount) * 100 : 0;
+  const rawCoverage = (hitCount / guide.length) * 100;
+  const rawColorAccuracy = hitCount > 0 ? (colorHitCount / hitCount) * 100 : 0;
+  const rawPositionAccuracy = hitCount > 0 ? (positionScoreSum / hitCount) * 100 : 0;
   const extraCount = playerUsed.filter((u) => !u).length;
 
-  // はみ出しペナルティ: お手本数に対するはみ出しの割合（最大 25 点まで減点）
-  const extraRatio = extraCount / Math.max(guide.length, 1);
-  const extraPenalty = Math.min(25, extraRatio * 60);
+  // ★甘めカーブ: 中盤を持ち上げる（50% カバレッジ → 約 64 点扱い、
+  //   80% → 約 86 点、100% は 100 のまま）
+  const coverage = curve(rawCoverage, 0.65);
+  const colorAccuracy = rawColorAccuracy; // 0/1 判定なのでカーブ不要
+  const positionAccuracy = curve(rawPositionAccuracy, 0.8);
 
-  // 総合: カバレッジ 50% + 色一致 25% + 位置一致 25% − はみ出し
+  // ★はみ出しペナルティを大幅緩和（最大 25 → 12、係数 60 → 25）。
+  //   タイムアタック中のはみ出しを大目に見る。
+  const extraRatio = extraCount / Math.max(guide.length, 1);
+  const extraPenalty = Math.min(12, extraRatio * 25);
+
+  // 総合: カバレッジ重視（55%）+ 色一致(20%) + 位置一致(25%) − はみ出し
   const totalRaw =
-    coverage * 0.5 +
-    colorAccuracy * 0.25 +
+    coverage * 0.55 +
+    colorAccuracy * 0.2 +
     positionAccuracy * 0.25 -
     extraPenalty;
   const total = Math.max(0, Math.min(100, Math.round(totalRaw)));
 
   const rank = rankOf(total);
-  const comment = commentOf({ total, coverage, colorAccuracy, extraCount });
+  const comment = commentOf({
+    total,
+    coverage: rawCoverage,
+    colorAccuracy: rawColorAccuracy,
+    extraCount,
+  });
 
   return {
     total,
-    coverage: round1(coverage),
-    colorAccuracy: round1(colorAccuracy),
-    positionAccuracy: round1(positionAccuracy),
+    // UI 表示は「実際にお手本のうちどれだけ拾えたか」が直感的なので生値を返す
+    coverage: round1(rawCoverage),
+    colorAccuracy: round1(rawColorAccuracy),
+    positionAccuracy: round1(rawPositionAccuracy),
     guideCount: guide.length,
     playerCount: player.length,
     extraCount,
     rank,
     comment,
   };
+}
+
+/**
+ * 0–100 の値を、低めの値ほど大きく持ち上げるべき乗カーブで変換する。
+ * exp < 1 で「甘め評価」になる。
+ *   curve(50, 0.65) ≒ 64 / curve(70, 0.65) ≒ 80 / curve(100, *) = 100
+ */
+function curve(v: number, exp: number): number {
+  if (v <= 0) return 0;
+  return Math.pow(Math.min(100, v) / 100, exp) * 100;
 }
 
 /**
@@ -180,11 +205,12 @@ function round1(v: number): number {
 }
 
 function rankOf(total: number): ScoreResult["rank"] {
-  if (total >= 92) return "SS";
-  if (total >= 82) return "S";
-  if (total >= 70) return "A";
-  if (total >= 55) return "B";
-  if (total >= 35) return "C";
+  // ★ランク閾値を全体的に下げて、頑張りを認めやすくする
+  if (total >= 87) return "SS";
+  if (total >= 73) return "S";
+  if (total >= 58) return "A";
+  if (total >= 42) return "B";
+  if (total >= 22) return "C";
   return "D";
 }
 
@@ -195,13 +221,13 @@ function commentOf(input: {
   extraCount: number;
 }): string {
   const { total, coverage, colorAccuracy, extraCount } = input;
-  if (total >= 92) return "ほとんどお手本通り。針を持つ手が見えるよう。";
-  if (total >= 82) return "見事な再現度。色も配置もよく追えています。";
-  if (coverage < 30) return "もう少しお手本の場所を意識して編んでみましょう。";
-  if (colorAccuracy < 40) return "形は近いけれど、色選びがお手本と違うようです。";
-  if (extraCount > input.coverage) return "はみ出しが多めです。お手本の縁に注意して。";
-  if (total >= 70) return "良い再現度。あと少しで満点圏内です。";
-  if (total >= 55) return "輪郭は捉えられています。色を揃えるとぐっと伸びます。";
+  if (total >= 87) return "ほとんどお手本通り。針を持つ手が見えるよう。";
+  if (total >= 73) return "見事な再現度。色も配置もよく追えています。";
+  if (total >= 58) return "良いライン取り。あと少しで満点圏内です。";
+  if (coverage < 25) return "まずはお手本の輪郭から、ゆっくりなぞってみましょう。";
+  if (colorAccuracy < 35) return "形は近いので、お手本に近い色を選ぶともっと伸びます。";
+  if (extraCount > coverage) return "はみ出しが多めです。お手本の縁を意識してみて。";
+  if (total >= 42) return "輪郭は捉えられています。次はもう少し色を揃えてみよう。";
   return "落ち着いて、お手本の塊を 1 つずつ追いかけてみましょう。";
 }
 
