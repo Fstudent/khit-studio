@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+:root {
+  /* warm linen palette */
+  --background: oklch(0.94 0.025 80);
+  --background-2: oklch(0.91 0.035 75);
+  --foreground: oklch(0.25 0.04 40);
+  --muted: oklch(0.85 0.03 70);
+  --muted-foreground: oklch(0.42 0.045 45);
+  --card: oklch(0.97 0.018 85);
+  --card-foreground: oklch(0.22 0.04 40);
+  --border: oklch(0.78 0.04 65 / 70%);
+  --primary: oklch(0.45 0.13 35);
+  --primary-foreground: oklch(0.98 0.01 80);
+  --accent: oklch(0.62 0.13 45);
+  --ring: oklch(0.55 0.12 55);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-2: var(--background-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-ring: var(--ring);
+  --font-display: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", system-ui,
+    sans-serif;
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    background-color: var(--background);
+    font-feature-settings: "palt" 1;
+  }
+}
+
+@layer utilities {
+  /* 布のテクスチャ: 縦糸×横糸の細かい縞 + ノイズ風グラデーション */
+  .bg-linen {
+    background-color: var(--background);
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        color-mix(in oklab, var(--foreground) 4%, transparent) 0 1px,
+        transparent 1px 3px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in oklab, var(--foreground) 4%, transparent) 0 1px,
+        transparent 1px 3px
+      ),
+      radial-gradient(
+        1100px 600px at 20% -10%,
+        color-mix(in oklab, var(--accent) 18%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        900px 500px at 110% 110%,
+        color-mix(in oklab, var(--primary) 15%, transparent),
+        transparent 55%
+      );
+    background-blend-mode: multiply, multiply, normal, normal;
+  }
+
+  /* キャンバス用の少し濃い布 */
+  .bg-canvas-cloth {
+    background-color: var(--background-2);
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        color-mix(in oklab, var(--foreground) 5%, transparent) 0 1px,
+        transparent 1px 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in oklab, var(--foreground) 5%, transparent) 0 1px,
+        transparent 1px 4px
+      ),
+      radial-gradient(
+        circle at 30% 20%,
+        color-mix(in oklab, white 12%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        circle at 80% 90%,
+        color-mix(in oklab, var(--primary) 10%, transparent),
+        transparent 55%
+      );
+  }
+
+  .craft-shadow {
+    box-shadow:
+      0 1px 0 color-mix(in oklab, white 70%, transparent) inset,
+      0 12px 30px -16px color-mix(in oklab, var(--foreground) 35%, transparent),
+      0 4px 10px -6px color-mix(in oklab, var(--foreground) 25%, transparent);
+  }
+
+  .stitch-divider {
+    background-image: radial-gradient(
+      circle,
+      color-mix(in oklab, var(--foreground) 30%, transparent) 1px,
+      transparent 1.5px
+    );
+    background-size: 8px 8px;
+  }
+}
