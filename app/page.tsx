@@ -20,25 +20,9 @@ export default function Home() {
               Knit Studio
             </p>
             <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-              Yarn × Gemini 3 Flash × Lyria 3 Clip
+              糸を選んで、画面に編む。
             </p>
           </div>
-        </div>
-
-        <div className="mt-6 max-w-2xl space-y-2">
-          <h1
-            className="text-balance text-3xl font-semibold leading-snug tracking-tight sm:text-4xl"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            糸を選んで、画面に編む。
-          </h1>
-          <p className="text-pretty text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
-            お好みの糸玉を選び、布の上を撫でるようにドラッグすると、
-            V字の編み目が連なって積み重なっていきます。
-            「お絵かきコピー」モードでは、Gemini 3 Flash が描いた線画を 30 秒でなぞる
-            タイムアタックに挑戦。Lyria 3 Clip 製の BGM が緊張アークを奏で、
-            半分なぞれると AI がお手本にディテールを描き足します。
-          </p>
         </div>
       </header>
 

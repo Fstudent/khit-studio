@@ -1,12 +1,5 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Brush,
@@ -21,15 +14,19 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { GameTimer } from "@/components/game-timer";
-import { KnittingCanvas, type KnittingCanvasHandle } from "@/components/knitting-canvas";
+import {
+  KnittingCanvas,
+  type KnittingCanvasHandle,
+} from "@/components/knitting-canvas";
 import { YarnSelector } from "@/components/yarn-selector";
 import { BgmClipPlayer, type BgmStatus } from "@/lib/bgm-clip-player";
-import { findYarn, YARNS, type Yarn } from "@/lib/yarns";
 import { scorePattern, type ScoreResult } from "@/lib/scoring";
 import { bgmClipPrompt } from "@/lib/tension-prompts";
 import { cn } from "@/lib/utils";
+import { findYarn, YARNS, type Yarn } from "@/lib/yarns";
 
 type GeneratePatternResponse = {
   subject: string | null;
@@ -95,7 +92,9 @@ export function KnittingStudio() {
 
   const togglePalette = useCallback((id: string) => {
     setPaletteIds((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id].slice(-6),
+      prev.includes(id)
+        ? prev.filter((p) => p !== id)
+        : [...prev, id].slice(-6),
     );
   }, []);
 
@@ -143,12 +142,16 @@ export function KnittingStudio() {
     const unsub = player.onStatusChange((s, err) => {
       setBgmStatus(s);
       if (s === "error") {
-        setBgmError(`BGM 生成に失敗しました（${err ?? "不明なエラー"}）。タイマーは続行します。`);
+        setBgmError(
+          `BGM 生成に失敗しました（${err ?? "不明なエラー"}）。タイマーは続行します。`,
+        );
       }
     });
 
     player
-      .prefetch(bgmClipPrompt(GAME_DURATION_SEC), { model: "lyria-3-clip-preview" })
+      .prefetch(bgmClipPrompt(GAME_DURATION_SEC), {
+        model: "lyria-3-clip-preview",
+      })
       .catch(() => {
         // 詳細メッセージは onStatusChange("error") 経由で表示済み
       })
@@ -186,9 +189,9 @@ export function KnittingStudio() {
             return;
           }
           if (s === "ready" && gameEndedAtRef.current != null) {
-            bgm.play().catch((e) =>
-              console.warn("[bgm] deferred play failed", e),
-            );
+            bgm
+              .play()
+              .catch((e) => console.warn("[bgm] deferred play failed", e));
             stop();
           } else if (s === "error" || s === "stopped") {
             stop();
@@ -197,7 +200,8 @@ export function KnittingStudio() {
       }
     }
 
-    if (tickIntervalRef.current != null) window.clearInterval(tickIntervalRef.current);
+    if (tickIntervalRef.current != null)
+      window.clearInterval(tickIntervalRef.current);
     tickIntervalRef.current = window.setInterval(() => {
       const now = performance.now();
       const remaining = Math.max(0, (gameEndedAtRef.current ?? now) - now);
@@ -243,7 +247,9 @@ export function KnittingStudio() {
         { intervalMs: 14 },
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "ネットワークエラーが発生しました。");
+      setError(
+        e instanceof Error ? e.message : "ネットワークエラーが発生しました。",
+      );
     } finally {
       setGenerating(false);
     }
@@ -298,7 +304,9 @@ export function KnittingStudio() {
       );
       await startGame();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "ネットワークエラーが発生しました。");
+      setError(
+        e instanceof Error ? e.message : "ネットワークエラーが発生しました。",
+      );
     } finally {
       setGenerating(false);
     }
@@ -377,13 +385,19 @@ export function KnittingStudio() {
             />
             <span>
               現在の編み糸:{" "}
-              <span className="font-medium text-foreground">{activeYarn.name}</span>
+              <span className="font-medium text-foreground">
+                {activeYarn.name}
+              </span>
             </span>
             <span className="ml-3 hidden sm:inline">
-              編み目: <span className="font-medium text-foreground">{count}</span>
+              編み目:{" "}
+              <span className="font-medium text-foreground">{count}</span>
               {mode === "copy" && hasGuide && (
                 <span className="ml-3">
-                  お手本: <span className="font-medium text-foreground">{guideCount}</span>
+                  お手本:{" "}
+                  <span className="font-medium text-foreground">
+                    {guideCount}
+                  </span>
                 </span>
               )}
             </span>
@@ -505,10 +519,18 @@ export function KnittingStudio() {
             </ol>
           ) : (
             <ol className="list-decimal space-y-1 pl-4">
-              <li>「お手本を生成」を押すと、{GAME_DURATION_SEC} 秒のカウントダウンと Lyria 3 製の BGM が同時に始まります。</li>
-              <li>薄く表示されたお手本を、同じ色の糸でドラッグしてなぞります。</li>
+              <li>
+                「お手本を生成」を押すと、{GAME_DURATION_SEC}{" "}
+                秒のカウントダウンと Lyria 3 製の BGM が同時に始まります。
+              </li>
+              <li>
+                薄く表示されたお手本を、同じ色の糸でドラッグしてなぞります。
+              </li>
               <li>残り時間が少なくなるほど BGM が緊迫していきます。</li>
-              <li>「採点する」または時間切れで、再現度が <strong>SS〜D</strong> でランク付けされます。</li>
+              <li>
+                「採点する」または時間切れで、再現度が <strong>SS〜D</strong>{" "}
+                でランク付けされます。
+              </li>
             </ol>
           )}
         </div>
@@ -549,8 +571,8 @@ function ModeTabs({
     >
       {(
         [
-          { id: "free", label: "自由に編む", Icon: Brush },
-          { id: "copy", label: "お手本コピー", Icon: Swords },
+          { id: "free", label: "フリーモード", Icon: Brush },
+          { id: "copy", label: "お手本まねゲーム", Icon: Swords },
         ] as const
       ).map(({ id, label, Icon }) => {
         const active = mode === id;
@@ -745,8 +767,9 @@ function CopyModePanel({
       </div>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Gemini 3 Flash が描いた線画のお手本を、Lyria 3 Clip の BGM 付き 30 秒勝負でなぞります。
-        どれだけ忠実に再現できるかを SS〜D の 6 段階で評価します。
+        Gemini 3 Flash が描いた線画のお手本を、Lyria 3 Clip の BGM 付き 30
+        秒勝負でなぞります。 どれだけ忠実に再現できるかを SS〜D の 6
+        段階で評価します。
       </p>
 
       <button
@@ -766,7 +789,11 @@ function CopyModePanel({
           </>
         ) : (
           <>
-            {hasGuide ? <RefreshCw className="size-4" /> : <Sparkles className="size-4" />}
+            {hasGuide ? (
+              <RefreshCw className="size-4" />
+            ) : (
+              <Sparkles className="size-4" />
+            )}
             {hasGuide ? "別のお題に挑戦" : "お手本を生成"}
           </>
         )}
@@ -892,7 +919,9 @@ function ScoreModal({
                   style={{ fontFamily: "var(--font-display)" }}
                 >
                   {score.total}
-                  <span className="ml-1 text-sm font-normal text-muted-foreground">/ 100</span>
+                  <span className="ml-1 text-sm font-normal text-muted-foreground">
+                    / 100
+                  </span>
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   お手本 {score.guideCount} 目 / 編んだ {score.playerCount} 目
